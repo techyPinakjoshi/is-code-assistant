@@ -1,0 +1,53 @@
+import React from 'react';
+import { PremiumIcon } from './icons';
+import { User } from '../types';
+import ProfileDropdown from './ProfileDropdown';
+
+interface HeaderProps {
+  onPremiumClick: () => void;
+  user: User | null;
+  onLoginClick: () => void;
+  onLogout: () => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ onPremiumClick, user, onLoginClick, onLogout }) => {
+  return (
+    <header className="bg-white shadow-sm sticky top-0 z-10">
+      <div className="container mx-auto px-4 py-3 flex items-center justify-between max-w-4xl">
+        <div className="flex items-center space-x-3">
+          <div className="bg-blue-600 p-2 rounded-lg">
+             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+             </svg>
+          </div>
+          <h1 className="text-xl font-bold text-slate-800">
+            IS Code Assistant
+          </h1>
+        </div>
+        <div className="flex items-center space-x-4">
+            {(!user || user.planId === 'free') && (
+                <button 
+                    onClick={onPremiumClick}
+                    className="flex items-center space-x-2 px-4 py-2 bg-amber-400 text-amber-900 font-semibold rounded-lg shadow-sm hover:bg-amber-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-colors duration-200">
+                    <PremiumIcon />
+                    <span>{user ? 'Upgrade Plan' : 'Go Premium'}</span>
+                </button>
+            )}
+           
+            {user ? (
+                <ProfileDropdown user={user} onLogout={onLogout} onManageSubscription={onPremiumClick} />
+            ) : (
+                 <button
+                    onClick={onLoginClick}
+                    className="px-5 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                    >
+                    Login
+                </button>
+            )}
+        </div>
+      </div>
+    </header>
+  );
+};
+
+export default Header;
