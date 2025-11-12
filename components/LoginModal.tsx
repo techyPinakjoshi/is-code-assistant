@@ -65,16 +65,20 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
           <div className="space-y-3">
              <button
               onClick={() => handleAuthAttempt('user@google.com')}
-              className="w-full flex items-center justify-center py-3 px-4 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="group w-full flex items-center justify-center py-3 px-4 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              <GoogleIcon />
+              <span className="block transition-transform duration-300 group-hover:scale-125">
+                <GoogleIcon />
+              </span>
               Continue with Google
             </button>
             <button
               onClick={() => handleAuthAttempt('user@apple.com')}
-              className="w-full flex items-center justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
+              className="group w-full flex items-center justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
             >
-              <AppleIcon />
+              <span className="block transition-transform duration-300 group-hover:scale-125">
+                <AppleIcon />
+              </span>
               Continue with Apple
             </button>
           </div>

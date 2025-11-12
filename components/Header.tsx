@@ -8,9 +8,11 @@ interface HeaderProps {
   user: User | null;
   onLoginClick: () => void;
   onLogout: () => void;
+  onOpenDashboard: () => void;
+  onOpenAdminInsights: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onPremiumClick, user, onLoginClick, onLogout }) => {
+const Header: React.FC<HeaderProps> = ({ onPremiumClick, user, onLoginClick, onLogout, onOpenDashboard, onOpenAdminInsights }) => {
   return (
     <header className="bg-white shadow-sm sticky top-0 z-10">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between max-w-4xl">
@@ -28,14 +30,16 @@ const Header: React.FC<HeaderProps> = ({ onPremiumClick, user, onLoginClick, onL
             {(!user || user.planId === 'free') && (
                 <button 
                     onClick={onPremiumClick}
-                    className="flex items-center space-x-2 px-4 py-2 bg-amber-400 text-amber-900 font-semibold rounded-lg shadow-sm hover:bg-amber-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-colors duration-200">
-                    <PremiumIcon />
+                    className="group flex items-center space-x-2 px-4 py-2 bg-amber-400 text-amber-900 font-semibold rounded-lg shadow-sm hover:bg-amber-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-colors duration-200">
+                    <span className="transition-transform duration-300 group-hover:scale-125">
+                      <PremiumIcon />
+                    </span>
                     <span>{user ? 'Upgrade Plan' : 'Go Premium'}</span>
                 </button>
             )}
            
             {user ? (
-                <ProfileDropdown user={user} onLogout={onLogout} onManageSubscription={onPremiumClick} />
+                <ProfileDropdown user={user} onLogout={onLogout} onManageSubscription={onPremiumClick} onOpenDashboard={onOpenDashboard} onOpenAdminInsights={onOpenAdminInsights} />
             ) : (
                  <button
                     onClick={onLoginClick}

@@ -7,7 +7,8 @@ if (!API_KEY) {
 }
 
 const ai = new GoogleGenAI({ apiKey: API_KEY });
-const model = 'gemini-2.5-pro';
+const textModel = 'gemini-2.5-pro';
+const visionModel = 'gemini-2.5-flash';
 
 const systemInstruction = `You are an expert civil engineer specializing in Indian Standard (IS) codes for construction. Your purpose is to provide detailed, accurate, and practical information on construction processes, material specifications, testing procedures, and auditing codes for various civil engineering structures in India.
 
@@ -28,11 +29,43 @@ export const getConstructionInfo = async (query: string): Promise<string> => {
         };
         
         const response = await ai.models.generateContent({
-            model: model,
+            model: textModel,
             contents: query,
             config: config,
         });
         
+        const text = response.text;
+        if (!text) {
+            throw new Error("Received an empty response from the API.");
+        }
+        return text;
+    } catch (error) {
+        console.error("Error fetching from Gemini API:", error);
+        throw new Error("Failed to communicate with the Gemini API.");
+    }
+};
+
+export const analyzeProgress = async (prompt: string, imageBase64: string, mimeType: string): Promise<string> => {
+    try {
+        const imagePart = {
+            inlineData: {
+                data: imageBase64,
+                mimeType: mimeType,
+            },
+        };
+
+        const textPart = {
+            text: prompt,
+        };
+        
+        const response = await ai.models.generateContent({
+            model: visionModel,
+            contents: { parts: [textPart, imagePart] },
+            config: {
+                systemInstruction,
+            }
+        });
+
         const text = response.text;
         if (!text) {
             throw new Error("Received an empty response from the API.");

@@ -35,6 +35,7 @@ const plans: Plan[] = [
     features: [
       'All features of Pro Tier',
       'Team Management & Collaboration',
+      'AI Analysis of Bill of Quantities',
       'AI Design Analysis (.dwg, .pdf)',
       'AI Work Progress Dashboard',
       'Priority Support',

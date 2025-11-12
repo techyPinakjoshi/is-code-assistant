@@ -1,14 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { User } from '../types';
-import { UserIcon, LogoutIcon, PremiumIcon, DashboardIcon } from './icons';
+// FIX: Import AnalyticsIcon to resolve 'Cannot find name' error.
+import { UserIcon, LogoutIcon, PremiumIcon, DashboardIcon, AnalyticsIcon } from './icons';
 
 interface ProfileDropdownProps {
   user: User;
   onLogout: () => void;
   onManageSubscription: () => void;
+  onOpenDashboard: () => void;
+  onOpenAdminInsights: () => void;
 }
 
-const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ user, onLogout, onManageSubscription }) => {
+const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ user, onLogout, onManageSubscription, onOpenDashboard, onOpenAdminInsights }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -29,7 +32,7 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ user, onLogout, onMan
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-center h-10 w-10 bg-slate-200 text-slate-600 rounded-full hover:bg-slate-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        className="flex items-center justify-center h-10 w-10 bg-slate-200 text-slate-600 rounded-full hover:bg-slate-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-transform duration-300 hover:scale-110"
         aria-haspopup="true"
         aria-expanded={isOpen}
       >
@@ -69,31 +72,44 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ user, onLogout, onMan
                 </div>
             </div>
             <div className="border-t border-slate-200">
+                <button
+                    onClick={() => { onOpenDashboard(); setIsOpen(false); }}
+                    className="group w-full text-left flex items-center px-4 py-3 text-sm text-slate-700 hover:bg-slate-50"
+                    role="menuitem"
+                >
+                    <span className="block transition-transform duration-300 group-hover:scale-110">
+                      <DashboardIcon />
+                    </span>
+                    My Dashboard
+                </button>
                  <button
                     onClick={() => { onManageSubscription(); setIsOpen(false); }}
-                    className="w-full text-left flex items-center px-4 py-3 text-sm text-slate-700 hover:bg-slate-50"
+                    className="group w-full text-left flex items-center px-4 py-3 text-sm text-slate-700 hover:bg-slate-50"
                     role="menuitem"
                 >
-                    <PremiumIcon />
+                    <span className="block transition-transform duration-300 group-hover:scale-110">
+                      <PremiumIcon />
+                    </span>
                     <span className='ml-2'>Manage Subscription</span>
                 </button>
-                 <a
-                    href="/#/admin"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => setIsOpen(false)}
-                    className="w-full text-left flex items-center px-4 py-3 text-sm text-slate-700 hover:bg-slate-50"
+                 <button
+                    onClick={() => { onOpenAdminInsights(); setIsOpen(false); }}
+                    className="group w-full text-left flex items-center px-4 py-3 text-sm text-slate-700 hover:bg-slate-50"
                     role="menuitem"
                 >
-                    <DashboardIcon />
-                    Manage App & Insights
-                </a>
+                    <span className="block transition-transform duration-300 group-hover:scale-110">
+                      <AnalyticsIcon />
+                    </span>
+                    <span className="ml-2">Manage App & Insights</span>
+                </button>
                 <button
                     onClick={onLogout}
-                    className="w-full text-left flex items-center px-4 py-3 text-sm text-red-600 hover:bg-slate-50"
+                    className="group w-full text-left flex items-center px-4 py-3 text-sm text-red-600 hover:bg-slate-50"
                     role="menuitem"
                 >
-                    <LogoutIcon />
+                    <span className="block transition-transform duration-300 group-hover:scale-110">
+                      <LogoutIcon />
+                    </span>
                     Logout
                 </button>
             </div>

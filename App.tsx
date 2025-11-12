@@ -8,7 +8,10 @@ import ResponseDisplay from './components/ResponseDisplay';
 import SubscriptionModal from './components/SubscriptionModal';
 import LoginModal from './components/LoginModal';
 import PaymentModal from './components/PaymentModal';
-import { BuildingIcon, RoadIcon, DamIcon, WaterTankIcon, MaterialIcon, AuditIcon, BridgeIcon, PipelineIcon, ElectricalIcon, FireSafetyIcon, EarthquakeIcon, WindLoadIcon } from './components/icons';
+import UserDashboardModal from './components/UserDashboardModal';
+import ProgressAnalysisModal from './components/ProgressAnalysisModal';
+import AdminInsightsModal from './components/AdminInsightsModal';
+import { BuildingIcon, RoadIcon, DamIcon, WaterTankIcon, MaterialIcon, AuditIcon, BridgeIcon, PipelineIcon, ElectricalIcon, FireSafetyIcon, EarthquakeIcon, WindLoadIcon, UploadIcon, LockIcon, SiteAnalysisIcon } from './components/icons';
 
 const App: React.FC = () => {
   const [query, setQuery] = useState('');
@@ -19,6 +22,9 @@ const App: React.FC = () => {
   const [isSubscriptionModalOpen, setIsSubscriptionModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [isDashboardModalOpen, setIsDashboardModalOpen] = useState(false);
+  const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false);
+  const [isAdminInsightsModalOpen, setIsAdminInsightsModalOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [user, setUser] = useState<User | null>(null);
 
@@ -95,6 +101,23 @@ const App: React.FC = () => {
     }
     setIsPaymentModalOpen(false);
   };
+
+  const handleFeatureHighlightClick = () => {
+    if (!user || user.planId === 'free' || user.planId === 'pro') {
+      setIsSubscriptionModalOpen(true);
+    } else {
+      // In a real app, this would open a file upload interface.
+      alert('This would open the file upload modal for Bill of Quantities analysis.');
+    }
+  };
+
+  const handleAnalysisFeatureClick = () => {
+    if (user?.planId === 'enterprise') {
+      setIsAnalysisModalOpen(true);
+    } else {
+      setIsSubscriptionModalOpen(true);
+    }
+  };
   
   return (
     <div className="bg-slate-50 min-h-screen text-slate-800">
@@ -103,6 +126,8 @@ const App: React.FC = () => {
         onPremiumClick={() => setIsSubscriptionModalOpen(true)}
         onLoginClick={() => setIsLoginModalOpen(true)}
         onLogout={handleLogout}
+        onOpenDashboard={() => setIsDashboardModalOpen(true)}
+        onOpenAdminInsights={() => setIsAdminInsightsModalOpen(true)}
       />
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         <section className="text-center mb-12">
@@ -113,18 +138,73 @@ const App: React.FC = () => {
         </section>
 
         <section className="mb-10">
-            <h3 className="text-xl font-semibold mb-4 text-center text-slate-700">Select a Category or Ask a Custom Question</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4 mb-8">
-                {categories.map(({ name, icon, prompt }) => (
-                    <CategoryButton 
-                        key={name}
-                        name={name}
-                        icon={icon}
-                        isActive={activeCategory === name}
-                        onClick={() => handleCategorySelect(name, prompt)}
-                    />
-                ))}
+          <h3 className="text-xl font-semibold mb-4 text-center text-slate-700">Select a Category to Start</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4 mb-8">
+              {categories.map(({ name, icon, prompt }) => (
+                  <CategoryButton 
+                      key={name}
+                      name={name}
+                      icon={icon}
+                      isActive={activeCategory === name}
+                      onClick={() => handleCategorySelect(name, prompt)}
+                  />
+              ))}
+          </div>
+        </section>
+
+        <section className="mb-10">
+            <div 
+                onClick={handleFeatureHighlightClick}
+                className="relative bg-white p-6 rounded-xl shadow-md border-2 border-dashed border-slate-300 hover:border-blue-500 hover:bg-blue-50 transition-all duration-200 cursor-pointer group"
+            >
+                {(!user || user.planId === 'free' || user.planId === 'pro') && (
+                    <div className="absolute top-3 right-3 flex items-center bg-amber-100 text-amber-800 text-xs font-bold px-2 py-1 rounded-full border border-amber-300">
+                        <LockIcon />
+                        Business Plan
+                    </div>
+                )}
+                <div className="flex flex-col md:flex-row items-center text-center md:text-left">
+                    <div className="flex-shrink-0 mb-4 md:mb-0 md:mr-6 text-slate-400 group-hover:text-blue-500 transition-all duration-300 group-hover:scale-105">
+                        <UploadIcon />
+                    </div>
+                    <div>
+                        <h4 className="text-lg font-bold text-slate-800">AI Analysis of Bill of Quantities</h4>
+                        <p className="text-slate-600 mt-1">
+                            Upload your plan files (.pdf, .dwg) to get an AI-powered analysis and verification of your Bill of Quantities. Save time and reduce errors.
+                        </p>
+                    </div>
+                </div>
             </div>
+        </section>
+
+        <section className="mb-10">
+            <div 
+                onClick={handleAnalysisFeatureClick}
+                className="relative bg-white p-6 rounded-xl shadow-md border-2 border-dashed border-slate-300 hover:border-blue-500 hover:bg-blue-50 transition-all duration-200 cursor-pointer group"
+            >
+                {(!user || user.planId !== 'enterprise') && (
+                    <div className="absolute top-3 right-3 flex items-center bg-purple-100 text-purple-800 text-xs font-bold px-2 py-1 rounded-full border border-purple-300">
+                        <LockIcon />
+                        Enterprise Plan
+                    </div>
+                )}
+                <div className="flex flex-col md:flex-row items-center text-center md:text-left">
+                    <div className="flex-shrink-0 mb-4 md:mb-0 md:mr-6 text-slate-400 group-hover:text-blue-500 transition-all duration-300 group-hover:scale-105">
+                        <SiteAnalysisIcon />
+                    </div>
+                    <div>
+                        <h4 className="text-lg font-bold text-slate-800">AI Work Progress Analysis</h4>
+                        <p className="text-slate-600 mt-1">
+                            Monitor construction progress in real-time. Upload site photos or use your camera for AI analysis against project designs.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <section className="mb-10">
+          <h3 className="text-xl font-semibold mb-4 text-center text-slate-700">Or Ask a Custom Question</h3>
           <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-md border border-slate-200">
             <textarea
               value={query}
@@ -174,6 +254,21 @@ const App: React.FC = () => {
         onClose={() => setIsLoginModalOpen(false)}
         onLogin={handleLogin}
       />
+      {user && (
+        <UserDashboardModal
+            isOpen={isDashboardModalOpen}
+            onClose={() => setIsDashboardModalOpen(false)}
+            user={user}
+            onUpgradeClick={() => {
+                setIsDashboardModalOpen(false);
+                setIsSubscriptionModalOpen(true);
+            }}
+            onOpenAnalysis={() => {
+              setIsDashboardModalOpen(false);
+              setIsAnalysisModalOpen(true);
+            }}
+        />
+      )}
       {selectedPlan && (
         <PaymentModal
           isOpen={isPaymentModalOpen}
@@ -182,6 +277,14 @@ const App: React.FC = () => {
           onPaymentSuccess={handlePaymentSuccess}
         />
       )}
+      <ProgressAnalysisModal 
+        isOpen={isAnalysisModalOpen}
+        onClose={() => setIsAnalysisModalOpen(false)}
+      />
+      <AdminInsightsModal
+        isOpen={isAdminInsightsModalOpen}
+        onClose={() => setIsAdminInsightsModalOpen(false)}
+      />
     </div>
   );
 };
