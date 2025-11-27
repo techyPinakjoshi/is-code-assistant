@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { GoogleIcon, AppleIcon } from './icons';
 
@@ -5,9 +6,12 @@ interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
   onLogin: (email: string, password?: string) => Promise<void>;
+  onSignup: (name: string, email: string, password?: string) => Promise<void>;
 }
 
-const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => {
+const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin, onSignup }) => {
+  const [isSignupMode, setIsSignupMode] = useState(false);
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -15,121 +19,159 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin }) => 
 
   if (!isOpen) return null;
 
-  const handleAuthAttempt = async (authEmail: string, authPassword?: string) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsLoading(true);
     setError('');
+
     try {
-      await onLogin(authEmail, authPassword);
-      onClose();
-    } catch (err) {
-      setError('Failed to authenticate. Please try again.');
+      if (isSignupMode) {
+        if (password.length < 6) {
+             throw new Error("Password must be at least 6 characters long.");
+        }
+        await onSignup(name, email, password);
+      } else {
+        await onLogin(email, password);
+      }
+      // Close is handled by parent upon success, usually.
+      // But we can ensure state reset here if needed.
+    } catch (err: any) {
+      setError(err.message || 'Authentication failed.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleEmailSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    handleAuthAttempt(email, password);
+  const toggleMode = () => {
+    setIsSignupMode(!isSignupMode);
+    setError('');
+    setPassword('');
   };
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
       onClick={onClose}
       aria-modal="true"
       role="dialog"
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-sm"
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-8 relative">
-          {isLoading && (
-            <div className="absolute inset-0 bg-white bg-opacity-80 flex items-center justify-center rounded-2xl">
-              <svg className="animate-spin h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-            </div>
-          )}
+          
+          {/* Header */}
           <div className="flex justify-between items-start mb-6">
-            <h2 className="text-2xl font-bold text-slate-900">Login or Sign Up</h2>
+            <div>
+                 <h2 className="text-2xl font-bold text-slate-900">{isSignupMode ? 'Create Account' : 'Welcome Back'}</h2>
+                 <p className="text-sm text-slate-500 mt-1">{isSignupMode ? 'Join to save your projects securely.' : 'Log in to access your dashboard.'}</p>
+            </div>
             <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
           
+          {/* Social Auth (Mock) */}
           <div className="space-y-3">
              <button
-              onClick={() => handleAuthAttempt('user@google.com')}
-              className="group w-full flex items-center justify-center py-3 px-4 border border-slate-300 rounded-md shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              onClick={() => alert("Google Auth Simulation: Please use Email/Password for this demo.")}
+              className="w-full flex items-center justify-center py-2.5 px-4 border border-slate-300 rounded-lg shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition-colors"
             >
-              <span className="block transition-transform duration-300 group-hover:scale-125">
-                <GoogleIcon />
-              </span>
-              Continue with Google
+              <GoogleIcon />
+              <span className="ml-2">Continue with Google</span>
             </button>
-            <button
-              onClick={() => handleAuthAttempt('user@apple.com')}
-              className="group w-full flex items-center justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
+             <button
+              onClick={() => alert("Apple Auth Simulation: Please use Email/Password for this demo.")}
+              className="w-full flex items-center justify-center py-2.5 px-4 bg-slate-900 rounded-lg shadow-sm text-sm font-medium text-white hover:bg-slate-800 transition-colors"
             >
-              <span className="block transition-transform duration-300 group-hover:scale-125">
-                <AppleIcon />
-              </span>
-              Continue with Apple
+              <AppleIcon />
+              <span className="ml-2">Continue with Apple</span>
             </button>
           </div>
 
           <div className="my-6 flex items-center">
-            <div className="flex-grow border-t border-slate-300"></div>
-            <span className="flex-shrink mx-4 text-slate-400 text-sm">OR</span>
-            <div className="flex-grow border-t border-slate-300"></div>
+            <div className="flex-grow border-t border-slate-200"></div>
+            <span className="flex-shrink mx-4 text-slate-400 text-xs font-semibold tracking-wide uppercase">Or continue with email</span>
+            <div className="flex-grow border-t border-slate-200"></div>
           </div>
           
-          <form onSubmit={handleEmailSubmit}>
-            <div className="space-y-4">
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-slate-700 sr-only">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1 block w-full px-3 py-3 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="Email Address"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-slate-700 sr-only">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  id="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="mt-1 block w-full px-3 py-3 border border-slate-300 rounded-md shadow-sm placeholder-slate-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="Password (optional)"
-                />
-              </div>
-              {error && <p className="text-sm text-red-600">{error}</p>}
+          {/* Email Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {isSignupMode && (
+                <div className="animate-fade-in">
+                    <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+                    <input
+                    type="text"
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="block w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                    placeholder="John Doe"
+                    required={isSignupMode}
+                    />
+                </div>
+            )}
+            
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+              <input
+                type="email"
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="block w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                placeholder="you@example.com"
+                required
+              />
             </div>
-            <div className="mt-6">
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-slate-400"
-              >
-                Continue with Email
-              </button>
+            
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+              <input
+                type="password"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="block w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                placeholder="••••••••"
+                required
+              />
+              {isSignupMode && <p className="text-xs text-slate-500 mt-1">Must be at least 6 characters.</p>}
             </div>
+
+            {error && (
+                <div className="p-3 bg-red-50 border border-red-100 rounded-lg flex items-center">
+                    <svg className="h-5 w-5 text-red-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="text-sm text-red-600">{error}</p>
+                </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300 disabled:cursor-not-allowed transition-all"
+            >
+              {isLoading ? 'Processing...' : (isSignupMode ? 'Create Account' : 'Sign In')}
+            </button>
           </form>
+
+          {/* Footer Toggle */}
+          <div className="mt-6 text-center">
+            <p className="text-sm text-slate-600">
+              {isSignupMode ? 'Already have an account?' : "Don't have an account?"}
+              <button 
+                onClick={toggleMode}
+                className="ml-1 font-semibold text-blue-600 hover:text-blue-500 focus:outline-none hover:underline"
+              >
+                {isSignupMode ? 'Log In' : 'Sign Up'}
+              </button>
+            </p>
+          </div>
         </div>
       </div>
     </div>

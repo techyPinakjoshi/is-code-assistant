@@ -1,6 +1,5 @@
 import React from 'react';
 import { User } from '../types';
-// FIX: Import CameraIcon to resolve 'Cannot find name' error.
 import { CheckIcon, PremiumIcon, LockIcon, TeamIcon, AnalyticsIcon, ApiKeyIcon, UploadIcon, UserIcon, CameraIcon } from './icons';
 
 interface UserDashboardModalProps {
@@ -9,6 +8,7 @@ interface UserDashboardModalProps {
   user: User;
   onUpgradeClick: () => void;
   onOpenAnalysis: () => void;
+  onOpenBoqAnalysis: () => void;
 }
 
 const StatCard: React.FC<{ title: string; value: string | number; children?: React.ReactNode }> = ({ title, value, children }) => (
@@ -50,7 +50,7 @@ const FeatureLink: React.FC<{
     </div>
 );
 
-const UserDashboardModal: React.FC<UserDashboardModalProps> = ({ isOpen, onClose, user, onUpgradeClick, onOpenAnalysis }) => {
+const UserDashboardModal: React.FC<UserDashboardModalProps> = ({ isOpen, onClose, user, onUpgradeClick, onOpenAnalysis, onOpenBoqAnalysis }) => {
   if (!isOpen) return null;
 
   const maxQueriesDisplay = user.usage.maxQueries === Infinity ? 'Unlimited' : user.usage.maxQueries;
@@ -75,9 +75,10 @@ const UserDashboardModal: React.FC<UserDashboardModalProps> = ({ isOpen, onClose
             </button>
         </div>
         <div className="mt-6 space-y-3">
-             <h4 className="text-lg font-semibold text-slate-700 mb-2">Locked Features</h4>
-             <FeatureLink icon={<UploadIcon />} title="AI Bill of Quantities Analysis" description="Verify your BOQs with AI." isLocked onUpgradeClick={onUpgradeClick} />
-             <FeatureLink icon={<TeamIcon />} title="Team Management" description="Collaborate with your colleagues." isLocked onUpgradeClick={onUpgradeClick} />
+             <h4 className="text-lg font-semibold text-slate-700 mb-2">Features (Unlocked for Demo)</h4>
+             {/* Unlocked for testing as requested */}
+             <FeatureLink icon={<UploadIcon />} title="AI Project Dashboard" description="Verify BOQs and Plan Projects." onActivate={onOpenBoqAnalysis} />
+             <FeatureLink icon={<TeamIcon />} title="Team Management" description="Collaborate with your colleagues." onActivate={() => alert('Team management is coming soon!')} />
         </div>
     </>
   );
@@ -88,20 +89,17 @@ const UserDashboardModal: React.FC<UserDashboardModalProps> = ({ isOpen, onClose
             <StatCard title="Query Usage" value="Unlimited" />
             <StatCard title="Plan Status" value="Active" />
         </div>
-        <div className="mt-6">
-            <h4 className="text-lg font-semibold text-slate-700 mb-3">Your Pro Features</h4>
-            <ul className="space-y-2 text-slate-600">
-                <li className="flex items-center"><CheckIcon /> <span className="ml-2">Unlimited Queries</span></li>
-                <li className="flex items-center"><CheckIcon /> <span className="ml-2">Save Conversations</span></li>
-                <li className="flex items-center"><CheckIcon /> <span className="ml-2">Offline Access to Saved Data</span></li>
-            </ul>
-        </div>
+        
         <div className="mt-6 bg-amber-50 border-2 border-amber-200 border-dashed p-6 rounded-lg">
             <h3 className="text-xl font-bold text-amber-800">Need Team Features?</h3>
             <p className="text-amber-700 mt-2 mb-4">Upgrade to the Business Plan for team management, AI design analysis, and priority support.</p>
             <button onClick={onUpgradeClick} className="px-6 py-2 bg-amber-500 text-white font-semibold rounded-lg shadow-sm hover:bg-amber-600">
                 Explore Business Plan
             </button>
+        </div>
+        <div className="mt-6 space-y-3">
+             <h4 className="text-lg font-semibold text-slate-700 mb-2">Tools</h4>
+             <FeatureLink icon={<UploadIcon />} title="AI Project Dashboard" description="Verify BOQs and Plan Projects." onActivate={onOpenBoqAnalysis} />
         </div>
     </>
   );
@@ -115,7 +113,7 @@ const UserDashboardModal: React.FC<UserDashboardModalProps> = ({ isOpen, onClose
         <div className="mt-6">
             <h4 className="text-lg font-semibold text-slate-700 mb-3">Your Quick Access Tools</h4>
             <div className="space-y-3">
-                <FeatureLink icon={<UploadIcon />} title="AI Bill of Quantities Analysis" description="Upload plans and get instant analysis." onUpgradeClick={onUpgradeClick}/>
+                <FeatureLink icon={<UploadIcon />} title="AI Bill of Quantities Analysis" description="Upload plans and get instant analysis." onUpgradeClick={onUpgradeClick} onActivate={onOpenBoqAnalysis} />
                 <FeatureLink icon={<TeamIcon />} title="Manage Your Team" description="Add or remove team members." onUpgradeClick={onUpgradeClick}/>
                 <FeatureLink icon={<AnalyticsIcon />} title="View Progress Dashboard" description="Monitor project analytics." onUpgradeClick={onUpgradeClick}/>
             </div>
@@ -167,7 +165,7 @@ const UserDashboardModal: React.FC<UserDashboardModalProps> = ({ isOpen, onClose
 
   const renderDashboard = () => {
     switch (user.planId) {
-        case 'free': return renderFreeDashboard();
+        case 'free': return renderFreeDashboard(); // Now shows unlocked links
         case 'pro': return renderProDashboard();
         case 'business': return renderBusinessDashboard();
         case 'enterprise': return renderEnterpriseDashboard();
@@ -198,7 +196,7 @@ const UserDashboardModal: React.FC<UserDashboardModalProps> = ({ isOpen, onClose
                 </div>
                 <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
