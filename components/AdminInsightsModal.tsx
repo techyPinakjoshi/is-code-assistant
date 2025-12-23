@@ -192,50 +192,64 @@ const AdminInsightsModal: React.FC<AdminInsightsModalProps> = ({ isOpen, onClose
                                 <h3 className="text-xl font-bold text-red-800 flex items-center mb-2">
                                     <span className="mr-2">🛠️</span> Fixing "Connection Closed" (Kid-Style)
                                 </h3>
-                                <p className="text-red-700 text-sm mb-6">If you see <b>ERR_CONNECTION_CLOSED</b>, follow these simple steps:</p>
                                 
+                                <div className="bg-blue-600 text-white p-4 rounded-lg shadow-md mb-6">
+                                    <h4 className="font-bold flex items-center uppercase text-sm tracking-widest">
+                                        <span className="mr-2">📍</span> The Correct Path in Vercel
+                                    </h4>
+                                    <div className="flex items-center space-x-2 mt-3 overflow-x-auto pb-2 text-xs md:text-sm whitespace-nowrap">
+                                        <div className="bg-white/20 px-3 py-1 rounded">Vercel Home</div>
+                                        <span>➜</span>
+                                        <div className="bg-white px-3 py-1 rounded text-blue-600 font-bold">Your Project</div>
+                                        <span>➜</span>
+                                        <div className="bg-white/20 px-3 py-1 rounded">Settings</div>
+                                        <span>➜</span>
+                                        <div className="bg-white/20 px-3 py-1 rounded underline">Domains</div>
+                                    </div>
+                                </div>
+
                                 <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
                                     {/* Detailed Vercel Guide to fix "No project found" search confusion */}
                                     <div className="bg-white p-6 rounded-lg border border-blue-200 shadow-sm border-l-8 border-l-blue-500">
                                         <h4 className="font-bold text-blue-800 mb-4 flex items-center">
                                             <span className="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center mr-2 text-xs">!</span>
-                                            Important: How to find the "Add" button in Vercel
+                                            Stop using the Search Bar!
                                         </h4>
                                         <div className="space-y-4 text-slate-700">
                                             <div className="flex items-start">
-                                                <div className="bg-slate-100 text-slate-600 w-5 h-5 rounded-full flex items-center justify-center font-bold text-xs mr-3 mt-0.5">1</div>
-                                                <p className="text-sm"><b>Don't use the top search bar.</b> Vercel is looking for projects there, not domains.</p>
+                                                <div className="bg-slate-100 text-slate-600 w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs mr-3 mt-0.5 flex-shrink-0">1</div>
+                                                <p className="text-sm"><b>Don't search at the top.</b> That search bar is broken for what we need. It will just say "No Project Found".</p>
                                             </div>
                                             <div className="flex items-start">
-                                                <div className="bg-slate-100 text-slate-600 w-5 h-5 rounded-full flex items-center justify-center font-bold text-xs mr-3 mt-0.5">2</div>
-                                                <p className="text-sm">Click on your project name in the main list (e.g. <b>indian-construction-code-assistant</b>).</p>
+                                                <div className="bg-slate-100 text-slate-600 w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs mr-3 mt-0.5 flex-shrink-0">2</div>
+                                                <p className="text-sm">Instead, scroll down and find your project folder card (it looks like a white box with your app name) and <b>click on it</b>.</p>
                                             </div>
                                             <div className="flex items-start">
-                                                <div className="bg-slate-100 text-slate-600 w-5 h-5 rounded-full flex items-center justify-center font-bold text-xs mr-3 mt-0.5">3</div>
-                                                <p className="text-sm">Click <b>Settings</b> at the top of the page.</p>
+                                                <div className="bg-slate-100 text-slate-600 w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs mr-3 mt-0.5 flex-shrink-0">3</div>
+                                                <p className="text-sm">Now look at the top menu bar. Click the word <b>Settings</b>. It's next to "Deployments" and "Analytics".</p>
                                             </div>
                                             <div className="flex items-start">
-                                                <div className="bg-slate-100 text-slate-600 w-5 h-5 rounded-full flex items-center justify-center font-bold text-xs mr-3 mt-0.5">4</div>
-                                                <p className="text-sm">Click <b>Domains</b> on the left menu.</p>
+                                                <div className="bg-slate-100 text-slate-600 w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs mr-3 mt-0.5 flex-shrink-0">4</div>
+                                                <p className="text-sm">On the left side of the screen, click <b>Domains</b>.</p>
                                             </div>
-                                            <div className="flex items-start">
-                                                <div className="bg-slate-100 text-slate-600 w-5 h-5 rounded-full flex items-center justify-center font-bold text-xs mr-3 mt-0.5">5</div>
-                                                <p className="text-sm">Type <b>weautomates.com</b> in the white box. The blue <b>Add</b> button will appear!</p>
+                                            <div className="flex items-start border-t border-slate-100 pt-4 mt-4">
+                                                <div className="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs mr-3 mt-0.5 flex-shrink-0">✔</div>
+                                                <p className="text-sm font-bold text-blue-700">Type "weautomates.com" in the big box. The blue ADD button will finally appear!</p>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                         <div className="bg-white p-5 rounded-lg border border-red-200 shadow-sm">
-                                            <h4 className="font-bold text-slate-800 text-sm">Step A: Check BigRock</h4>
+                                            <h4 className="font-bold text-slate-800 text-sm">A: Check BigRock</h4>
                                             <p className="text-xs text-slate-500 mt-1">Make sure A-Record is <b>76.76.21.21</b>.</p>
                                         </div>
                                         <div className="bg-white p-5 rounded-lg border border-red-200 shadow-sm">
-                                            <h4 className="font-bold text-slate-800 text-sm">Step B: SSL Lock</h4>
+                                            <h4 className="font-bold text-slate-800 text-sm">B: SSL Lock</h4>
                                             <p className="text-xs text-slate-500 mt-1">Wait 10 mins for Vercel to make the lock 🔒 symbol green.</p>
                                         </div>
                                         <div className="bg-white p-5 rounded-lg border border-red-200 shadow-sm">
-                                            <h4 className="font-bold text-slate-800 text-sm">Step C: Refresh</h4>
+                                            <h4 className="font-bold text-slate-800 text-sm">C: Magic Refresh</h4>
                                             <p className="text-xs text-slate-500 mt-1">Wait for a short nap (5 mins) then refresh your page.</p>
                                         </div>
                                     </div>

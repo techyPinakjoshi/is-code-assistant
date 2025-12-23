@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { GoogleIcon, AppleIcon } from './icons';
+import { loginWithGoogle } from '../services/authService';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -33,12 +34,22 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin, onSig
       } else {
         await onLogin(email, password);
       }
-      // Close is handled by parent upon success, usually.
-      // But we can ensure state reset here if needed.
     } catch (err: any) {
       setError(err.message || 'Authentication failed.');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setError('');
+    setIsLoading(true);
+    try {
+        await loginWithGoogle();
+        // Redirect happens automatically
+    } catch (err: any) {
+        setError(err.message || 'Google login failed.');
+        setIsLoading(false);
     }
   };
 
@@ -74,17 +85,18 @@ const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onLogin, onSig
             </button>
           </div>
           
-          {/* Social Auth (Mock) */}
+          {/* Social Auth */}
           <div className="space-y-3">
              <button
-              onClick={() => alert("Google Auth Simulation: Please use Email/Password for this demo.")}
-              className="w-full flex items-center justify-center py-2.5 px-4 border border-slate-300 rounded-lg shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition-colors"
+              onClick={handleGoogleLogin}
+              disabled={isLoading}
+              className="w-full flex items-center justify-center py-2.5 px-4 border border-slate-300 rounded-lg shadow-sm text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition-colors disabled:opacity-50"
             >
               <GoogleIcon />
               <span className="ml-2">Continue with Google</span>
             </button>
              <button
-              onClick={() => alert("Apple Auth Simulation: Please use Email/Password for this demo.")}
+              onClick={() => alert("Apple Auth is under maintenance. Please use Google or Email.")}
               className="w-full flex items-center justify-center py-2.5 px-4 bg-slate-900 rounded-lg shadow-sm text-sm font-medium text-white hover:bg-slate-800 transition-colors"
             >
               <AppleIcon />

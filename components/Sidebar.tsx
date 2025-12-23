@@ -41,7 +41,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       <div className={`w-64 bg-slate-900 text-slate-300 flex flex-col h-screen fixed left-0 top-0 overflow-hidden border-r border-slate-700 shadow-2xl z-30 transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-4 border-b border-slate-700 bg-slate-800 flex justify-between items-center">
           <div>
-            <h2 className="text-xl font-bold text-white cursor-pointer hover:text-blue-400" onClick={onBackToHome}>IS Code Assistant</h2>
+            <h2 className="text-lg font-bold text-white cursor-pointer hover:text-blue-400" onClick={onBackToHome}>BOQ & Code Assistant</h2>
             <p className="text-xs text-slate-500">Professional Suite</p>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-white md:hidden">

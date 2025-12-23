@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { PremiumIcon, MenuIcon } from './icons';
 import { User } from '../types';
@@ -16,7 +17,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ onPremiumClick, user, onLoginClick, onLogout, onOpenDashboard, onOpenAdminInsights, onMenuClick }) => {
   return (
     <header className="bg-white shadow-sm sticky top-0 z-10">
-      <div className="container mx-auto px-4 py-3 flex items-center justify-between max-w-4xl">
+      <div className="container mx-auto px-4 py-3 flex items-center justify-between max-w-5xl">
         <div className="flex items-center space-x-3">
           <button 
             onClick={onMenuClick} 
@@ -30,8 +31,8 @@ const Header: React.FC<HeaderProps> = ({ onPremiumClick, user, onLoginClick, onL
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
              </svg>
           </div>
-          <h1 className="text-xl font-bold text-slate-800 hidden sm:block">
-            IS Code Assistant
+          <h1 className="text-xl font-bold text-slate-800 hidden md:block">
+            BOQ Extractor & Code Assistant
           </h1>
         </div>
         <div className="flex items-center space-x-4">

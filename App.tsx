@@ -61,9 +61,6 @@ const App: React.FC = () => {
   // Load Data based on User
   useEffect(() => {
     const loadData = async () => {
-        // In a real app, fetch from Supabase 'projects' and 'chats' tables
-        // For now, we fallback to local storage for demo continuity, 
-        // but this is where you'd call supabase.from('projects').select('*')
         const userKey = user ? user.email : 'guest';
         const projectKey = `is_code_projects_${userKey}`;
         const chatKey = `is_code_chats_${userKey}`;
@@ -84,8 +81,6 @@ const App: React.FC = () => {
     const userKey = user ? user.email : 'guest';
     const storageKey = `is_code_projects_${userKey}`;
     const projectWithUser = { ...project, userId: userKey };
-
-    // In a real app: await supabase.from('projects').upsert(projectWithUser)
 
     const existingIndex = savedProjects.findIndex(p => p.id === project.id);
     let updated;
@@ -110,8 +105,6 @@ const App: React.FC = () => {
     const userKey = user ? user.email : 'guest';
     const storageKey = `is_code_chats_${userKey}`;
     const chatWithUser = { ...chat, userId: userKey };
-
-    // In a real app: await supabase.from('chats').insert(chatWithUser)
 
     const updated = [chatWithUser, ...savedChats].slice(0, 20); 
     setSavedChats(updated);
@@ -279,51 +272,84 @@ const App: React.FC = () => {
             onOpenAdminInsights={() => setIsAdminInsightsModalOpen(true)}
             onMenuClick={() => setIsSidebarOpen(!isSidebarOpen)}
           />
-          <main className="container mx-auto px-4 py-8 max-w-4xl relative">
-            <section className="text-center mb-6">
-              <h2 className="text-3xl md:text-4xl font-bold mb-2 text-slate-900">AI Construction Assistant</h2>
-              <p className="text-base text-slate-600 max-w-3xl mx-auto">
-                Get instant, accurate information on IS codes, construction processes, materials, and testing procedures.
+          <main className="container mx-auto px-4 py-8 max-w-5xl relative">
+            <section className="text-center mb-8">
+              <h2 className="text-3xl md:text-4xl font-extrabold mb-3 text-slate-900 tracking-tight">
+                BOQ Extractor & Construction Code Assistant
+              </h2>
+              <p className="text-lg text-slate-600 max-w-3xl mx-auto leading-relaxed">
+                Streamline your construction planning with AI-powered BOQ extraction and IS code compliance.
               </p>
             </section>
 
-            <form onSubmit={handleSubmit} className="mb-8 bg-white p-4 rounded-xl shadow-md border border-slate-200">
-                <label htmlFor="query-textarea" className="block text-sm font-semibold text-slate-700 mb-2">General Query</label>
-                <div className="relative">
-                    <textarea
-                      id="query-textarea"
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      placeholder="Type your general construction query here..."
-                      className="w-full p-3 pr-24 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow duration-200 resize-none text-sm"
-                      rows={2}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            handleSubmit();
-                        }
-                      }}
-                      aria-label="Query Input"
-                    />
-                    <button
-                      type="submit"
-                      disabled={isLoading || !query}
-                      className="absolute top-1/2 right-2 -translate-y-1/2 px-4 py-1.5 bg-blue-600 text-white text-sm font-semibold rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-slate-400 disabled:cursor-not-allowed transition-colors duration-200"
-                      aria-label="Submit Query"
-                    >
-                      {isLoading ? (
-                         <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                      ) : 'Ask AI'}
-                    </button>
+            {/* NEW: Landing Page Hero Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+                {/* 1st Element: 2D Plan to BOQ */}
+                <div 
+                    onClick={handleCreateNewProject}
+                    className="flex flex-col h-full bg-white p-6 rounded-2xl shadow-lg border-2 border-dashed border-blue-200 hover:border-blue-500 hover:bg-blue-50 transition-all duration-300 cursor-pointer group"
+                >
+                    <div className="flex items-center mb-4">
+                        <div className="p-3 bg-blue-100 text-blue-600 rounded-xl group-hover:scale-110 transition-transform">
+                            <UploadIcon />
+                        </div>
+                        <h4 className="ml-4 text-xl font-bold text-slate-900">2D Plan to BOQ & Project Schedule</h4>
+                    </div>
+                    <p className="text-slate-600 text-sm leading-relaxed mb-4 flex-grow">
+                        Upload your 2D plan files (.pdf, images) to instantly generate a construction schedule (Gantt), WBS, and Bill of Quantities with IS code references.
+                    </p>
+                    <div className="flex items-center text-blue-600 font-semibold text-sm">
+                        Start Planning Now <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
+                    </div>
                 </div>
-            </form>
 
-            <section className="mb-10">
-              <h3 className="text-xl font-semibold mb-4 text-center text-slate-700">Select a Category to Explore</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4 mb-8">
+                {/* 2nd Element: General Chatbot Query */}
+                <form onSubmit={handleSubmit} className="flex flex-col h-full bg-white p-6 rounded-2xl shadow-lg border border-slate-200">
+                    <div className="flex items-center mb-4">
+                        <div className="p-3 bg-slate-100 text-slate-600 rounded-xl">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                            </svg>
+                        </div>
+                        <h4 className="ml-4 text-xl font-bold text-slate-900">General Code Query</h4>
+                    </div>
+                    <div className="relative flex-grow flex flex-col">
+                        <textarea
+                          id="query-textarea"
+                          value={query}
+                          onChange={(e) => setQuery(e.target.value)}
+                          placeholder="Ask about IS 456, NBC 2016, or any construction process..."
+                          className="w-full h-full p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none text-sm bg-slate-50"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                handleSubmit();
+                            }
+                          }}
+                          aria-label="Query Input"
+                        />
+                        <button
+                          type="submit"
+                          disabled={isLoading || !query}
+                          className="mt-4 w-full py-3 bg-blue-600 text-white font-bold rounded-xl shadow-md hover:bg-blue-700 disabled:bg-slate-400 transition-all flex items-center justify-center"
+                        >
+                          {isLoading ? (
+                             <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                          ) : 'Ask Assistant'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <section className="mb-12">
+              <h3 className="text-xl font-bold mb-6 text-slate-800 flex items-center">
+                <span className="w-1.5 h-6 bg-blue-600 rounded-full mr-3"></span>
+                Explore Categories
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4">
                   {categories.map(({ name, icon, prompt }) => (
                       <CategoryButton 
                           key={name}
@@ -336,39 +362,25 @@ const App: React.FC = () => {
               </div>
             </section>
             
-            <section className="mb-10">
-                <div 
-                    onClick={handleCreateNewProject}
-                    className="relative bg-white p-6 rounded-xl shadow-md border-2 border-dashed border-slate-300 hover:border-blue-500 hover:bg-blue-50 transition-all duration-200 cursor-pointer group"
-                >
-                    <div className="flex flex-col md:flex-row items-center text-center md:text-left">
-                        <div className="flex-shrink-0 mb-4 md:mb-0 md:mr-6 text-slate-400 group-hover:text-blue-500 transition-all duration-300 group-hover:scale-105">
-                            <UploadIcon />
-                        </div>
-                        <div>
-                            <h4 className="text-lg font-bold text-slate-800">AI Project Planning & Dashboard</h4>
-                            <p className="text-slate-600 mt-1">
-                                Upload your 2D plan files (.pdf, images) to instantly generate a construction schedule (Gantt), WBS, and Bill of Quantities.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-            
-            <section className="mb-10">
+            <section className="mb-12">
                 <div 
                     onClick={() => setIsAnalysisModalOpen(true)}
-                    className="relative bg-white p-6 rounded-xl shadow-md border-2 border-dashed border-slate-300 hover:border-blue-500 hover:bg-blue-50 transition-all duration-200 cursor-pointer group"
+                    className="relative bg-white p-6 rounded-2xl shadow-lg border border-slate-200 hover:border-blue-300 hover:bg-slate-50 transition-all duration-300 cursor-pointer group"
                 >
                     <div className="flex flex-col md:flex-row items-center text-center md:text-left">
-                        <div className="flex-shrink-0 mb-4 md:mb-0 md:mr-6 text-slate-400 group-hover:text-blue-500 transition-all duration-300 group-hover:scale-105">
+                        <div className="flex-shrink-0 mb-4 md:mb-0 md:mr-6 p-4 bg-emerald-50 text-emerald-600 rounded-2xl group-hover:scale-105 transition-transform">
                             <SiteAnalysisIcon />
                         </div>
                         <div>
-                            <h4 className="text-lg font-bold text-slate-800">AI Work Progress Analysis</h4>
-                            <p className="text-slate-600 mt-1">
-                                Monitor construction progress in real-time. Upload site photos or use your camera for AI analysis against project designs.
+                            <h4 className="text-lg font-bold text-slate-900">AI Work Progress Analysis</h4>
+                            <p className="text-slate-600 mt-1 text-sm leading-relaxed">
+                                Monitor construction progress in real-time. Upload site photos or use your camera for AI analysis against project designs and IS code standards.
                             </p>
+                        </div>
+                        <div className="ml-auto mt-4 md:mt-0 text-emerald-600">
+                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                             </svg>
                         </div>
                     </div>
                 </div>
@@ -378,16 +390,6 @@ const App: React.FC = () => {
               <ResponseDisplay isLoading={isLoading} error={error} response={response} />
             </div>
           </main>
-          
-          <button 
-             onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
-             className="fixed bottom-6 right-6 p-4 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 z-40 transition-transform hover:scale-110 md:hidden"
-             aria-label="Scroll to chat"
-          >
-             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-            </svg>
-          </button>
       </div>
 
       {isSubscriptionModalOpen && (
