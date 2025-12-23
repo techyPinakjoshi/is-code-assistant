@@ -1,139 +1,103 @@
 
+import { supabase } from '../src/lib/supabaseClient';
 import { User, PlanId } from '../types';
 
-const USERS_DB_KEY = 'is_code_users_db';
-const CURRENT_USER_KEY = 'is_code_user';
-
-interface UserRecord {
-  email: string;
-  passwordHash: string;
-  userProfile: User;
-}
-
-interface UserDatabase {
-  [email: string]: UserRecord;
-}
-
-// Helper: Hash password using Web Crypto API (SHA-256)
-const hashPassword = async (password: string): Promise<string> => {
-  const msgBuffer = new TextEncoder().encode(password);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-};
-
-// Helper: Get DB
-const getDatabase = (): UserDatabase => {
-  const dbStr = localStorage.getItem(USERS_DB_KEY);
-  return dbStr ? JSON.parse(dbStr) : {};
-};
-
-// Helper: Save DB
-const saveDatabase = (db: UserDatabase) => {
-  localStorage.setItem(USERS_DB_KEY, JSON.stringify(db));
+// Map Supabase User to App User Type
+const mapSupabaseUser = (sbUser: any): User => {
+    const meta = sbUser.user_metadata || {};
+    return {
+        name: meta.full_name || sbUser.email?.split('@')[0] || 'User',
+        email: sbUser.email || '',
+        planId: meta.plan_id || 'free',
+        planName: meta.plan_name || 'Free Tier',
+        planExpiry: meta.plan_expiry,
+        joinedAt: new Date(sbUser.created_at).toLocaleDateString(),
+        usage: {
+            queriesToday: 0, // In a real app, fetch from DB
+            maxQueries: meta.plan_id === 'free' ? 10 : Infinity,
+        }
+    };
 };
 
 export const login = async (email: string, password?: string): Promise<User> => {
-  // Simulate network delay
-  await new Promise(resolve => setTimeout(resolve, 600));
-
-  if (!email || !password) {
-    throw new Error('Please provide both email and password.');
-  }
-
-  const db = getDatabase();
-  const record = db[email.toLowerCase()];
-
-  if (!record) {
-    throw new Error('User not found. Please sign up first.');
-  }
-
-  const inputHash = await hashPassword(password);
+  if (!email || !password) throw new Error("Email and password required.");
   
-  // Secure comparison
-  if (record.passwordHash !== inputHash) {
-    throw new Error('Incorrect password.');
-  }
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
-  // Update last login or refresh token logic could go here
-  localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(record.userProfile));
-  return record.userProfile;
+  if (error) throw new Error(error.message);
+  if (!data.user) throw new Error("Login failed.");
+
+  return mapSupabaseUser(data.user);
 };
 
 export const signup = async (name: string, email: string, password?: string): Promise<User> => {
-  await new Promise(resolve => setTimeout(resolve, 800));
+  if (!email || !password) throw new Error("Email and password required.");
 
-  if (!email || !password || !name) {
-    throw new Error('All fields are required.');
-  }
-
-  const normalizedEmail = email.toLowerCase();
-  const db = getDatabase();
-
-  if (db[normalizedEmail]) {
-    throw new Error('User already exists. Please log in.');
-  }
-
-  const passwordHash = await hashPassword(password);
-
-  const newUser: User = {
-    name: name,
-    email: normalizedEmail,
-    planId: 'free',
-    planName: 'Free Tier',
-    planExpiry: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString(), // 30 day trial
-    joinedAt: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    usage: {
-      queriesToday: 0,
-      maxQueries: 10,
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+        data: {
+            full_name: name,
+            plan_id: 'free',
+            plan_name: 'Free Tier'
+        }
     }
-  };
+  });
 
-  // Save to DB
-  db[normalizedEmail] = {
-    email: normalizedEmail,
-    passwordHash,
-    userProfile: newUser
-  };
-  saveDatabase(db);
+  if (error) throw new Error(error.message);
+  if (!data.user) throw new Error("Signup failed. Please check your email for verification.");
 
-  // Set as current user
-  localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(newUser));
-  return newUser;
+  return mapSupabaseUser(data.user);
 };
 
-export const logout = () => {
-  localStorage.removeItem(CURRENT_USER_KEY);
+export const logout = async () => {
+  await supabase.auth.signOut();
+  localStorage.removeItem('is_code_user');
 };
 
-export const updateUserPlan = (user: User, newPlan: { id: PlanId, name: string }): User => {
-  const updatedUser = {
-    ...user,
-    planId: newPlan.id,
-    planName: newPlan.name,
-    planExpiry: undefined,
-    usage: {
-      ...user.usage,
-      maxQueries: Infinity,
-    },
-  };
+export const updateUserPlan = async (user: User, newPlan: { id: PlanId, name: string }): Promise<User> => {
+    // 1. Update Supabase User Metadata
+    const { data, error } = await supabase.auth.updateUser({
+        data: {
+            plan_id: newPlan.id,
+            plan_name: newPlan.name
+        }
+    });
 
-  // Update in DB as well to persist plan change
-  const db = getDatabase();
-  if (db[user.email]) {
-    db[user.email].userProfile = updatedUser;
-    saveDatabase(db);
-  }
-  
-  localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(updatedUser));
-  return updatedUser;
+    if (error) {
+        console.error("Failed to update plan", error);
+        return user; // Fallback
+    }
+
+    // 2. Return updated local user object
+    const updatedUser = {
+        ...user,
+        planId: newPlan.id,
+        planName: newPlan.name,
+        usage: {
+            ...user.usage,
+            maxQueries: Infinity
+        }
+    };
+    return updatedUser;
 };
 
-/**
- * Retrieves all registered users from the simulated database.
- * Used for the Admin Insights dashboard.
- */
-export const getAllUsers = (): User[] => {
-    const db = getDatabase();
-    return Object.values(db).map(record => record.userProfile).reverse(); // Newest first
+export const getAllUsers = async (): Promise<User[]> => {
+    // This requires Admin privileges in Supabase or a public profiles table.
+    // For now, we'll return an empty array or fetch from a 'profiles' table if you create one.
+    // In strict Row Level Security (RLS), regular users cannot see other users.
+    return []; 
+};
+
+// Check for existing session on load
+export const getCurrentSession = async (): Promise<User | null> => {
+    const { data } = await supabase.auth.getSession();
+    if (data.session?.user) {
+        return mapSupabaseUser(data.session.user);
+    }
+    return null;
 };

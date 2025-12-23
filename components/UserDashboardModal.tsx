@@ -24,13 +24,13 @@ const FeatureLink: React.FC<{
     title: string; 
     description: string; 
     isLocked?: boolean; 
-    onUpgradeClick: () => void;
+    onUpgradeClick?: () => void;
     onActivate?: () => void;
 }> = ({ icon, title, description, isLocked, onUpgradeClick, onActivate }) => (
     <div 
         onClick={() => {
             if (isLocked) {
-                onUpgradeClick();
+                if (onUpgradeClick) onUpgradeClick();
             } else if (onActivate) {
                 onActivate();
             } else {

@@ -1,7 +1,7 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { getConstructionInfo } from './services/geminiService';
-import { login, signup, updateUserPlan } from './services/authService';
+import { login, signup, updateUserPlan, logout, getCurrentSession } from './services/authService';
 import { Category, User, Plan, SavedProject, SavedChat, DashboardData } from './types';
 import Header from './components/Header';
 import CategoryButton from './components/CategoryButton';
@@ -16,7 +16,7 @@ import ProjectDashboardModal from './components/ProjectDashboardModal';
 import CategoryDetailModal from './components/CategoryDetailModal';
 import MonitoringDashboardModal from './components/MonitoringDashboardModal';
 import Sidebar from './components/Sidebar';
-import OnboardingModal from './components/OnboardingModal'; // New Import
+import OnboardingModal from './components/OnboardingModal'; 
 import { BuildingIcon, RoadIcon, DamIcon, WaterTankIcon, MaterialIcon, AuditIcon, BridgeIcon, PipelineIcon, ElectricalIcon, FireSafetyIcon, EarthquakeIcon, WindLoadIcon, UploadIcon, SiteAnalysisIcon } from './components/icons';
 
 const App: React.FC = () => {
@@ -35,7 +35,7 @@ const App: React.FC = () => {
   const [isCategoryDetailOpen, setIsCategoryDetailOpen] = useState(false);
   const [isMonitoringModalOpen, setIsMonitoringModalOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false); // New State
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
   
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -43,49 +43,50 @@ const App: React.FC = () => {
   // Persistence States
   const [savedProjects, setSavedProjects] = useState<SavedProject[]>([]);
   const [savedChats, setSavedChats] = useState<SavedChat[]>([]);
-  // We need to track the current project ID to ensure we load the right one
   const [currentProject, setCurrentProject] = useState<SavedProject | null>(null);
 
   const responseRef = useRef<HTMLDivElement>(null);
 
-  // Load user from local storage if exists (simple session persistence)
+  // Initialize Session
   useEffect(() => {
-    const savedUser = localStorage.getItem('is_code_user');
-    if (savedUser) {
-        setUser(JSON.parse(savedUser));
-    }
+    const initSession = async () => {
+        const currentUser = await getCurrentSession();
+        if (currentUser) {
+            setUser(currentUser);
+        }
+    };
+    initSession();
   }, []);
 
   // Load Data based on User
   useEffect(() => {
-    const userKey = user ? user.email : 'guest';
-    const projectKey = `is_code_projects_${userKey}`;
-    const chatKey = `is_code_chats_${userKey}`;
+    const loadData = async () => {
+        // In a real app, fetch from Supabase 'projects' and 'chats' tables
+        // For now, we fallback to local storage for demo continuity, 
+        // but this is where you'd call supabase.from('projects').select('*')
+        const userKey = user ? user.email : 'guest';
+        const projectKey = `is_code_projects_${userKey}`;
+        const chatKey = `is_code_chats_${userKey}`;
 
-    const loadedProjects = localStorage.getItem(projectKey);
-    const loadedChats = localStorage.getItem(chatKey);
+        const loadedProjects = localStorage.getItem(projectKey);
+        const loadedChats = localStorage.getItem(chatKey);
 
-    if (loadedProjects) {
-        setSavedProjects(JSON.parse(loadedProjects));
-    } else {
-        setSavedProjects([]);
-    }
+        if (loadedProjects) setSavedProjects(JSON.parse(loadedProjects));
+        else setSavedProjects([]);
 
-    if (loadedChats) {
-        setSavedChats(JSON.parse(loadedChats));
-    } else {
-        setSavedChats([]);
-    }
+        if (loadedChats) setSavedChats(JSON.parse(loadedChats));
+        else setSavedChats([]);
+    };
+    loadData();
   }, [user]);
 
   const saveProject = (project: SavedProject) => {
     const userKey = user ? user.email : 'guest';
     const storageKey = `is_code_projects_${userKey}`;
-    
-    // Ensure project has userId attached
     const projectWithUser = { ...project, userId: userKey };
 
-    // Check if project exists and update it, otherwise add new
+    // In a real app: await supabase.from('projects').upsert(projectWithUser)
+
     const existingIndex = savedProjects.findIndex(p => p.id === project.id);
     let updated;
     if (existingIndex >= 0) {
@@ -97,33 +98,36 @@ const App: React.FC = () => {
     
     setSavedProjects(updated);
     localStorage.setItem(storageKey, JSON.stringify(updated));
+
+    if (currentProject && currentProject.id === project.id) {
+        setCurrentProject(projectWithUser);
+    } else if (!currentProject) {
+        setCurrentProject(projectWithUser);
+    }
   };
 
   const saveChat = (chat: SavedChat) => {
     const userKey = user ? user.email : 'guest';
     const storageKey = `is_code_chats_${userKey}`;
-    
     const chatWithUser = { ...chat, userId: userKey };
 
-    const updated = [chatWithUser, ...savedChats].slice(0, 20); // Keep last 20
+    // In a real app: await supabase.from('chats').insert(chatWithUser)
+
+    const updated = [chatWithUser, ...savedChats].slice(0, 20); 
     setSavedChats(updated);
     localStorage.setItem(storageKey, JSON.stringify(updated));
   };
 
   const categories: { name: Category; icon: React.ReactNode; prompt: string }[] = [
-    // Core Structures
     { name: 'Buildings', icon: <BuildingIcon />, prompt: 'What are the key IS codes for concrete mix design in residential buildings?' },
     { name: 'Roads', icon: <RoadIcon />, prompt: 'Provide a summary of material specifications for flexible pavement construction as per Indian standards.' },
     { name: 'Bridges & Culverts', icon: <BridgeIcon />, prompt: 'What are the primary IS codes governing the design and construction of reinforced concrete bridges in India?' },
     { name: 'Dams', icon: <DamIcon />, prompt: 'Explain the standard safety audit procedures for concrete gravity dams in India.' },
     { name: 'Water Tanks', icon: <WaterTankIcon />, prompt: 'What are the design and construction guidelines for reinforced concrete water tanks according to IS codes?' },
-    // Structural Analysis
     { name: 'Earthquake Resistance', icon: <EarthquakeIcon />, prompt: 'Explain the principles of ductile detailing for reinforced concrete structures in seismic zones according to IS 13920.' },
     { name: 'Wind Load Analysis', icon: <WindLoadIcon />, prompt: 'How is the basic wind speed and design wind pressure calculated for a building in India as per IS 875 (Part 3)?' },
-    // Building Systems
     { name: 'Pipelines & Drainage', icon: <PipelineIcon />, prompt: 'What are the IS codes for laying and testing of water supply pipelines and drainage systems?' },
     { name: 'Electrical Systems', icon: <ElectricalIcon />, prompt: 'Summarize the key IS codes for electrical wiring and installations in residential buildings.' },
-    // Safety & Quality
     { name: 'Fire Safety', icon: <FireSafetyIcon />, prompt: 'Outline the fire safety requirements for high-rise buildings as per the National Building Code of India.' },
     { name: 'Material Testing', icon: <MaterialIcon />, prompt: 'Describe the standard test for compressive strength of concrete cubes as per IS 516.' },
     { name: 'Structural Audits', icon: <AuditIcon />, prompt: 'Outline the process for a structural audit of a 30-year-old building based on Indian standards.' },
@@ -145,15 +149,12 @@ const App: React.FC = () => {
     try {
       const result = await getConstructionInfo(query);
       setResponse(result);
-      
-      // Auto-save chat
       saveChat({
           id: Date.now().toString(),
           query: query,
           response: result,
           date: new Date().toLocaleDateString()
       });
-
       setTimeout(() => {
          responseRef.current?.scrollIntoView({ behavior: 'smooth' });
       }, 100);
@@ -171,7 +172,7 @@ const App: React.FC = () => {
         setUser(loggedInUser);
         setIsLoginModalOpen(false);
     } catch (error: any) {
-        throw error; // Let the modal handle the error display
+        throw error;
     }
   };
 
@@ -180,16 +181,16 @@ const App: React.FC = () => {
           const newUser = await signup(name, email, password);
           setUser(newUser);
           setIsLoginModalOpen(false);
-          setIsOnboardingOpen(true); // Trigger onboarding for new users
+          setIsOnboardingOpen(true);
       } catch (error: any) {
           throw error;
       }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await logout();
     setUser(null);
-    localStorage.removeItem('is_code_user');
-    setSavedProjects([]); // Clear visible projects immediately (will reload guest data on effect)
+    setSavedProjects([]);
     setSavedChats([]);
     setIsSidebarOpen(false);
   };
@@ -200,9 +201,9 @@ const App: React.FC = () => {
     setIsPaymentModalOpen(true);
   };
 
-  const handlePaymentSuccess = (newPlan: Plan) => {
+  const handlePaymentSuccess = async (newPlan: Plan) => {
     if (user) {
-      const updatedUser = updateUserPlan(user, newPlan);
+      const updatedUser = await updateUserPlan(user, newPlan);
       setUser(updatedUser);
     }
     setIsPaymentModalOpen(false);
@@ -214,10 +215,10 @@ const App: React.FC = () => {
       return cat ? cat.icon : null;
   };
   
-  // Sidebar Handlers
   const handleSelectProject = (project: SavedProject) => {
       setCurrentProject(project);
       setIsProjectDashboardOpen(true);
+      if (window.innerWidth < 768) setIsSidebarOpen(false);
   };
 
   const handleSelectChat = (chat: SavedChat) => {
@@ -226,11 +227,25 @@ const App: React.FC = () => {
       setTimeout(() => {
          responseRef.current?.scrollIntoView({ behavior: 'smooth' });
       }, 100);
+      if (window.innerWidth < 768) setIsSidebarOpen(false);
   };
 
   const handleCreateNewProject = () => {
-    setCurrentProject(null); // Reset current project to trigger upload mode
+    setCurrentProject(null);
     setIsProjectDashboardOpen(true);
+    if (window.innerWidth < 768) setIsSidebarOpen(false);
+  };
+
+  const handleOpenMainDashboard = () => {
+    if (currentProject) {
+        setIsProjectDashboardOpen(true);
+    } else if (savedProjects.length > 0) {
+        setCurrentProject(savedProjects[0]);
+        setIsProjectDashboardOpen(true);
+    } else {
+        handleCreateNewProject();
+    }
+    if (window.innerWidth < 768) setIsSidebarOpen(false);
   };
   
   return (
@@ -244,9 +259,13 @@ const App: React.FC = () => {
          savedChats={savedChats}
          onSelectProject={handleSelectProject}
          onSelectChat={handleSelectChat}
-         onOpenMonitoring={() => setIsMonitoringModalOpen(true)}
+         onOpenMonitoring={() => {
+             setIsMonitoringModalOpen(true);
+             if (window.innerWidth < 768) setIsSidebarOpen(false);
+         }}
          onBackToHome={() => window.scrollTo({top: 0, behavior: 'smooth'})}
          onCreateNewProject={handleCreateNewProject}
+         onOpenMainDashboard={handleOpenMainDashboard}
       />
 
       {/* Main Content Area */}
@@ -360,7 +379,6 @@ const App: React.FC = () => {
             </div>
           </main>
           
-          {/* Floating Chat Button for quick access */}
           <button 
              onClick={() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })}
              className="fixed bottom-6 right-6 p-4 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 z-40 transition-transform hover:scale-110 md:hidden"
@@ -372,7 +390,6 @@ const App: React.FC = () => {
           </button>
       </div>
 
-      {/* Modals */}
       {isSubscriptionModalOpen && (
         <SubscriptionModal
           isOpen={isSubscriptionModalOpen}
@@ -440,7 +457,7 @@ const App: React.FC = () => {
             isOpen={isProjectDashboardOpen}
             onClose={() => setIsProjectDashboardOpen(false)}
             onSave={saveProject}
-            initialProject={currentProject} // Pass the full saved project object
+            initialProject={currentProject} 
         />
        )}
        {isCategoryDetailOpen && (

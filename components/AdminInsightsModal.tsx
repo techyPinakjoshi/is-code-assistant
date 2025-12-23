@@ -1,8 +1,9 @@
 
 import React, { useEffect, useState } from 'react';
-import { TeamIcon, PremiumIcon, RevenueIcon, AnalyticsIcon } from './icons';
+import { TeamIcon, PremiumIcon, RevenueIcon, AnalyticsIcon, PlusIcon, DocumentIcon, LockIcon, CheckIcon, CopyIcon, CubeIcon } from './icons';
 import { getAllUsers } from '../services/authService';
 import { User } from '../types';
+import RAGUploadModal from './RAGUploadModal';
 
 interface AdminInsightsModalProps {
   isOpen: boolean;
@@ -23,8 +24,9 @@ const StatCard: React.FC<{ icon: React.ReactNode; title: string; value: string; 
 
 const AdminInsightsModal: React.FC<AdminInsightsModalProps> = ({ isOpen, onClose }) => {
     const [users, setUsers] = useState<User[]>([]);
+    const [isRAGModalOpen, setIsRAGModalOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState<'insights' | 'domain' | 'fix'>('insights');
     
-    // Refresh data whenever modal opens
     useEffect(() => {
         if (isOpen) {
             const realUsers = getAllUsers();
@@ -34,33 +36,28 @@ const AdminInsightsModal: React.FC<AdminInsightsModalProps> = ({ isOpen, onClose
 
     if (!isOpen) return null;
     
-    // Calculate Real Metrics
     const totalUsers = users.length;
     const activeSubscriptions = users.filter(u => u.planId !== 'free').length;
     
-    // Approximate MRR Calculation
     const mrr = users.reduce((acc, user) => {
         if (user.planId === 'pro') return acc + 999;
         if (user.planId === 'business') return acc + 5000;
         return acc;
     }, 0);
 
-    // Calculate Breakdown
-    const breakdown = {
-        free: users.filter(u => u.planId === 'free').length,
-        pro: users.filter(u => u.planId === 'pro').length,
-        business: users.filter(u => u.planId === 'business').length,
-        enterprise: users.filter(u => u.planId === 'enterprise').length,
+    const envStatus = {
+        supabaseUrl: !!process.env.VITE_SUPABASE_URL,
+        supabaseKey: !!process.env.VITE_SUPABASE_ANON_KEY,
+        geminiKey: !!process.env.API_KEY
     };
 
-    const subBreakdownConfig = [
-        { plan: 'Free', count: breakdown.free, color: 'bg-slate-400' },
-        { plan: 'Pro', count: breakdown.pro, color: 'bg-blue-500' },
-        { plan: 'Business', count: breakdown.business, color: 'bg-amber-500' },
-        { plan: 'Enterprise', count: breakdown.enterprise, color: 'bg-purple-500' },
-    ].filter(item => item.count > 0); // Only show active plans
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        alert(`Copied: ${text}`);
+    };
 
     return (
+        <>
         <div
             className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
             onClick={onClose}
@@ -72,7 +69,29 @@ const AdminInsightsModal: React.FC<AdminInsightsModalProps> = ({ isOpen, onClose
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="p-6 border-b border-slate-200 flex justify-between items-center flex-shrink-0">
-                    <h2 className="text-2xl font-bold text-slate-900">App Management & Insights</h2>
+                    <div>
+                        <h2 className="text-2xl font-bold text-slate-900">Admin Console</h2>
+                        <div className="flex mt-2 space-x-4">
+                            <button 
+                                onClick={() => setActiveTab('insights')}
+                                className={`text-sm font-semibold pb-1 border-b-2 transition-colors ${activeTab === 'insights' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                            >
+                                Usage Insights
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('domain')}
+                                className={`text-sm font-semibold pb-1 border-b-2 transition-colors ${activeTab === 'domain' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+                            >
+                                Domain Setup
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('fix')}
+                                className={`text-sm font-bold pb-1 border-b-2 transition-colors ${activeTab === 'fix' ? 'border-red-600 text-red-600' : 'border-transparent text-red-400 hover:text-red-500'}`}
+                            >
+                                🆘 Fix Connection Error
+                            </button>
+                        </div>
+                    </div>
                     <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -81,85 +100,160 @@ const AdminInsightsModal: React.FC<AdminInsightsModalProps> = ({ isOpen, onClose
                 </div>
                 
                 <div className="flex-grow p-6 overflow-y-auto space-y-6">
-                    {/* Key Metrics */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <StatCard icon={<TeamIcon />} title="Total Users" value={totalUsers.toLocaleString()} />
-                        <StatCard icon={<PremiumIcon />} title="Active Subscriptions" value={activeSubscriptions.toLocaleString()} />
-                        <StatCard icon={<RevenueIcon />} title="Est. Monthly Revenue" value={`₹${mrr.toLocaleString()}`} />
-                        <StatCard icon={<AnalyticsIcon />} title="Total Database Records" value={totalUsers.toString()} />
-                    </div>
-
-                    {/* Subscription Breakdown */}
-                    {totalUsers > 0 && (
-                        <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                            <h3 className="text-lg font-semibold text-slate-800 mb-4">Subscription Breakdown</h3>
-                            <div className="space-y-3">
-                            <div className="w-full flex rounded-full h-6 bg-slate-200 overflow-hidden">
-                                    {subBreakdownConfig.map(sub => (
-                                        <div 
-                                            key={sub.plan}
-                                            className={sub.color}
-                                            style={{ width: `${(sub.count / totalUsers) * 100}%` }}
-                                            title={`${sub.plan}: ${sub.count}`}
-                                        ></div>
-                                    ))}
+                    {activeTab === 'insights' ? (
+                        <>
+                            <div className="bg-blue-50 border border-blue-100 p-6 rounded-xl flex justify-between items-center">
+                                <div>
+                                    <h3 className="text-lg font-bold text-blue-900">Knowledge Base (RAG)</h3>
+                                    <p className="text-sm text-blue-700 mt-1">Upload IS Code clauses to the vector database to improve AI accuracy.</p>
                                 </div>
-                                <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
-                                    {subBreakdownConfig.map(sub => (
-                                        <div key={sub.plan} className="flex items-center">
-                                            <span className={`h-3 w-3 rounded-full mr-2 ${sub.color}`}></span>
-                                            <span className="text-slate-700 font-medium">{sub.plan}</span>
-                                            <span className="text-slate-500 ml-2">{sub.count}</span>
+                                <button onClick={() => setIsRAGModalOpen(true)} className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition-colors font-semibold text-sm">
+                                    <span className="mr-2"><PlusIcon /></span> Add Document
+                                </button>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                <StatCard icon={<TeamIcon />} title="Total Users" value={totalUsers.toLocaleString()} />
+                                <StatCard icon={<PremiumIcon />} title="Active Subscriptions" value={activeSubscriptions.toLocaleString()} />
+                                <StatCard icon={<RevenueIcon />} title="Est. Monthly Revenue" value={`₹${mrr.toLocaleString()}`} />
+                                <StatCard icon={<AnalyticsIcon />} title="Database Records" value={totalUsers.toString()} />
+                            </div>
+                        </>
+                    ) : activeTab === 'domain' ? (
+                        <div className="animate-fade-in space-y-6">
+                            {/* Architecture Map */}
+                            <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                                <h3 className="text-lg font-semibold text-slate-800 mb-6 text-center">Correct Setup for weautomates.com</h3>
+                                <div className="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-8">
+                                    <div className="text-center w-40">
+                                        <div className="p-4 bg-slate-100 rounded-lg border border-slate-200 flex flex-col items-center">
+                                            <span className="text-2xl mb-1">🌍</span>
+                                            <span className="text-xs font-bold text-slate-700 uppercase">BigRock</span>
                                         </div>
-                                    ))}
+                                        <p className="text-[10px] text-slate-500 mt-2">A-Record: 76.76.21.21</p>
+                                    </div>
+                                    <div className="text-slate-300 hidden md:block">➔</div>
+                                    <div className="text-center w-40">
+                                        <div className="p-4 bg-blue-600 rounded-lg border border-blue-700 flex flex-col items-center text-white shadow-lg">
+                                            <span className="text-2xl mb-1">🚀</span>
+                                            <span className="text-xs font-bold uppercase">Vercel</span>
+                                        </div>
+                                        <p className="text-[10px] text-blue-600 mt-2 font-bold uppercase">Add Domain Here!</p>
+                                    </div>
+                                    <div className="text-slate-300 hidden md:block">➔</div>
+                                    <div className="text-center w-40">
+                                        <div className="p-4 bg-emerald-100 rounded-lg border border-emerald-200 flex flex-col items-center">
+                                            <span className="text-2xl mb-1">⚡</span>
+                                            <span className="text-xs font-bold text-emerald-800 uppercase">Supabase</span>
+                                        </div>
+                                        <p className="text-[10px] text-emerald-600 mt-2">Database & Auth</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* BigRock Setup Checklist */}
+                            <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                                <h3 className="text-lg font-semibold text-slate-800 mb-4">Step 1: BigRock DNS Settings</h3>
+                                <div className="overflow-hidden border border-slate-200 rounded-lg">
+                                    <table className="w-full text-sm text-left">
+                                        <thead className="bg-slate-100 text-slate-500 uppercase text-xs">
+                                            <tr>
+                                                <th className="px-6 py-3">Type</th>
+                                                <th className="px-6 py-3">Host</th>
+                                                <th className="px-6 py-3">Value</th>
+                                                <th className="px-6 py-3">Copy</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100">
+                                            <tr>
+                                                <td className="px-6 py-4 font-bold text-blue-600">A</td>
+                                                <td className="px-6 py-4 font-mono">@</td>
+                                                <td className="px-6 py-4 font-mono">76.76.21.21</td>
+                                                <td className="px-6 py-4">
+                                                    <button onClick={() => copyToClipboard('76.76.21.21')} className="p-1 hover:text-blue-600"><CopyIcon /></button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td className="px-6 py-4 font-bold text-blue-600">CNAME</td>
+                                                <td className="px-6 py-4 font-mono">www</td>
+                                                <td className="px-6 py-4 font-mono">cname.vercel-dns.com</td>
+                                                <td className="px-6 py-4">
+                                                    <button onClick={() => copyToClipboard('cname.vercel-dns.com')} className="p-1 hover:text-blue-600"><CopyIcon /></button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="animate-fade-in space-y-6">
+                            <div className="bg-red-50 border border-red-100 p-6 rounded-xl">
+                                <h3 className="text-xl font-bold text-red-800 flex items-center mb-2">
+                                    <span className="mr-2">🛠️</span> Fixing "Connection Closed" (Kid-Style)
+                                </h3>
+                                <p className="text-red-700 text-sm mb-6">If you see <b>ERR_CONNECTION_CLOSED</b>, follow these simple steps:</p>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
+                                    {/* Detailed Vercel Guide to fix "No project found" search confusion */}
+                                    <div className="bg-white p-6 rounded-lg border border-blue-200 shadow-sm border-l-8 border-l-blue-500">
+                                        <h4 className="font-bold text-blue-800 mb-4 flex items-center">
+                                            <span className="bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center mr-2 text-xs">!</span>
+                                            Important: How to find the "Add" button in Vercel
+                                        </h4>
+                                        <div className="space-y-4 text-slate-700">
+                                            <div className="flex items-start">
+                                                <div className="bg-slate-100 text-slate-600 w-5 h-5 rounded-full flex items-center justify-center font-bold text-xs mr-3 mt-0.5">1</div>
+                                                <p className="text-sm"><b>Don't use the top search bar.</b> Vercel is looking for projects there, not domains.</p>
+                                            </div>
+                                            <div className="flex items-start">
+                                                <div className="bg-slate-100 text-slate-600 w-5 h-5 rounded-full flex items-center justify-center font-bold text-xs mr-3 mt-0.5">2</div>
+                                                <p className="text-sm">Click on your project name in the main list (e.g. <b>indian-construction-code-assistant</b>).</p>
+                                            </div>
+                                            <div className="flex items-start">
+                                                <div className="bg-slate-100 text-slate-600 w-5 h-5 rounded-full flex items-center justify-center font-bold text-xs mr-3 mt-0.5">3</div>
+                                                <p className="text-sm">Click <b>Settings</b> at the top of the page.</p>
+                                            </div>
+                                            <div className="flex items-start">
+                                                <div className="bg-slate-100 text-slate-600 w-5 h-5 rounded-full flex items-center justify-center font-bold text-xs mr-3 mt-0.5">4</div>
+                                                <p className="text-sm">Click <b>Domains</b> on the left menu.</p>
+                                            </div>
+                                            <div className="flex items-start">
+                                                <div className="bg-slate-100 text-slate-600 w-5 h-5 rounded-full flex items-center justify-center font-bold text-xs mr-3 mt-0.5">5</div>
+                                                <p className="text-sm">Type <b>weautomates.com</b> in the white box. The blue <b>Add</b> button will appear!</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div className="bg-white p-5 rounded-lg border border-red-200 shadow-sm">
+                                            <h4 className="font-bold text-slate-800 text-sm">Step A: Check BigRock</h4>
+                                            <p className="text-xs text-slate-500 mt-1">Make sure A-Record is <b>76.76.21.21</b>.</p>
+                                        </div>
+                                        <div className="bg-white p-5 rounded-lg border border-red-200 shadow-sm">
+                                            <h4 className="font-bold text-slate-800 text-sm">Step B: SSL Lock</h4>
+                                            <p className="text-xs text-slate-500 mt-1">Wait 10 mins for Vercel to make the lock 🔒 symbol green.</p>
+                                        </div>
+                                        <div className="bg-white p-5 rounded-lg border border-red-200 shadow-sm">
+                                            <h4 className="font-bold text-slate-800 text-sm">Step C: Refresh</h4>
+                                            <p className="text-xs text-slate-500 mt-1">Wait for a short nap (5 mins) then refresh your page.</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="mt-8 p-4 bg-white rounded-lg border border-slate-200 text-center">
+                                    <p className="text-sm font-bold text-slate-700">Still stuck?</p>
+                                    <p className="text-xs text-slate-500 mt-1">Sometimes the internet takes up to 24 hours to "wake up" to new domain names in India. Just wait one night!</p>
                                 </div>
                             </div>
                         </div>
                     )}
-                    
-                    {/* Recent Signups */}
-                    <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                        <h3 className="text-lg font-semibold text-slate-800 mb-4">Real Registered Users</h3>
-                        {users.length === 0 ? (
-                            <p className="text-slate-500 italic">No users registered yet.</p>
-                        ) : (
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-sm text-left">
-                                    <thead className="text-xs text-slate-500 uppercase bg-slate-100">
-                                        <tr>
-                                            <th scope="col" className="px-6 py-3 rounded-l-lg">User</th>
-                                            <th scope="col" className="px-6 py-3">Plan</th>
-                                            <th scope="col" className="px-6 py-3 rounded-r-lg">Joined At</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {users.slice(0, 10).map((user, idx) => (
-                                            <tr key={idx} className="border-b border-slate-200 hover:bg-slate-50">
-                                                <td className="px-6 py-4">
-                                                    <div className="font-medium text-slate-800">{user.name}</div>
-                                                    <div className="text-slate-500">{user.email}</div>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                                                        user.planId === 'pro' ? 'bg-blue-100 text-blue-800' :
-                                                        user.planId === 'business' ? 'bg-amber-100 text-amber-800' :
-                                                        user.planId === 'enterprise' ? 'bg-purple-100 text-purple-800' :
-                                                        'bg-slate-100 text-slate-800'
-                                                    }`}>{user.planName}</span>
-                                                </td>
-                                                <td className="px-6 py-4 text-slate-500">
-                                                    {user.joinedAt || 'N/A'}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-                    </div>
                 </div>
             </div>
         </div>
+        
+        <RAGUploadModal isOpen={isRAGModalOpen} onClose={() => setIsRAGModalOpen(false)} />
+        </>
     );
 };
 

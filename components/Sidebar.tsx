@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { SavedProject, SavedChat } from '../types';
-import { CameraIcon, DashboardIcon, PlusIcon, CloseIcon } from './icons';
+import { CameraIcon, DashboardIcon, PlusIcon, CloseIcon, AnalyticsIcon } from './icons';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface SidebarProps {
   onOpenMonitoring: () => void;
   onBackToHome: () => void;
   onCreateNewProject: () => void;
+  onOpenMainDashboard: () => void; // New prop for the main tab
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ 
@@ -23,7 +25,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   onSelectChat,
   onOpenMonitoring,
   onBackToHome,
-  onCreateNewProject
+  onCreateNewProject,
+  onOpenMainDashboard
 }) => {
   return (
     <>
@@ -51,6 +54,18 @@ const Sidebar: React.FC<SidebarProps> = ({
           {/* Main Tools */}
           <div>
             <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Tools</h3>
+            
+            {/* Project Progress Dashboard (Main Tab) */}
+             <button 
+                onClick={onOpenMainDashboard}
+                className="w-full flex items-center p-3 mb-3 rounded-lg bg-gradient-to-r from-emerald-900 to-slate-800 hover:from-emerald-800 hover:to-slate-700 border border-emerald-800 text-white transition-all shadow-md group"
+              >
+                <span className="p-1.5 bg-emerald-600 rounded-md mr-3 group-hover:bg-emerald-500 transition-colors">
+                    <AnalyticsIcon />
+                </span>
+                <span className="font-medium text-sm">Project Dashboard</span>
+            </button>
+
             <button 
                 onClick={onOpenMonitoring}
                 className="w-full flex items-center p-3 rounded-lg bg-gradient-to-r from-blue-900 to-slate-800 hover:from-blue-800 hover:to-slate-700 border border-blue-800 text-white transition-all shadow-md group"
@@ -65,7 +80,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
           {/* Projects History */}
           <div>
-            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Project Dashboards</h3>
+            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Saved Projects</h3>
             
             {/* New Project Button */}
             <button 
